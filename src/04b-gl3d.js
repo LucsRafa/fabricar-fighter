@@ -471,9 +471,12 @@ void main(){
       hell([-0.05, 0.68, 0], 0.86, 0.38, 0.72, c.hair, { shine: 50 });
       hell([0.42, 0.92, 0], 0.48, 0.34, 0.6, c.hair, { shine: 50 }, M.Rz(-0.35));
       hell([0.72, 0.86, 0], 0.22, 0.2, 0.46, c.hair, { shine: 50 }, M.Rz(-0.6));
-      // barba curta e aparada (não é barbudo) + bigode
-      hell([0.32, -0.56, 0], 0.68, 0.5, 0.97, c.hair, { shine: 8 });
-      hell([0.9, -0.32, 0], 0.13, 0.08, 0.38, c.hair, { shine: 8 });
+      // barba ralinha (barba por fazer): camada fina e translúcida + costeletas e bigode
+      const st = { a: 0.42, shine: 2 };
+      hell([0.3, -0.5, 0], 0.68, 0.52, 0.99, c.hair, st);
+      hell([0.02, -0.08, 0.86], 0.2, 0.4, 0.14, c.hair, st);
+      hell([0.02, -0.08, -0.86], 0.2, 0.4, 0.14, c.hair, st);
+      hell([0.9, -0.33, 0], 0.09, 0.05, 0.34, c.hair, { a: 0.5, shine: 2 });
     } else if (f.id === 'marcus') {
       hell([0.35, -0.55, 0], 0.72, 0.6, 0.96, c.hair, { shine: 8 });
       hell([0.9, -0.3, 0], 0.16, 0.1, 0.42, c.hair, { shine: 8 });

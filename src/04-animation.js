@@ -1102,23 +1102,13 @@ FF.Anim = (function () {
     ctx.moveTo(-r * 0.2, -r * 1.06);
     ctx.quadraticCurveTo(r * 0.3, -r * 1.3, r * 0.7, -r * 1.2);
     ctx.stroke();
-    // barba curta e aparada (não é barbudo)
-    ctx.beginPath();
-    ctx.moveTo(-r * 0.02, r * 0.2);
-    ctx.quadraticCurveTo(0, r * 0.88, r * 0.46, r * 0.96);
-    ctx.quadraticCurveTo(r * 0.9, r * 0.92, r * 0.98, r * 0.48);
-    ctx.lineTo(r * 0.84, r * 0.42);
-    ctx.quadraticCurveTo(r * 0.62, r * 0.64, r * 0.44, r * 0.46);
-    ctx.quadraticCurveTo(r * 0.2, r * 0.48, r * 0.14, r * 0.18);
-    ctx.closePath();
-    ctx.fillStyle = c.hair;
-    ctx.fill();
-    ctx.beginPath();
-    ctx.moveTo(r * 0.54, r * 0.36);
-    ctx.quadraticCurveTo(r * 0.76, r * 0.28, r * 0.98, r * 0.38);
-    ctx.lineWidth = 5;
-    ctx.strokeStyle = c.hair;
-    ctx.stroke();
+    // barba ralinha (barba por fazer), costeletas e bigode
+    stubble(ctx, [
+      [-0.12, -0.2, 0.06, 0.4, 16],
+      [0.0, 0.4, 0.5, 0.98, 34],
+      [0.46, 0.66, 0.86, 1.02, 22],
+      [0.5, 0.3, 0.92, 0.4, 14],
+    ], r, c.hair, 0.8);
     // boca
     ctx.strokeStyle = OUT;
     ctx.lineWidth = 3;
