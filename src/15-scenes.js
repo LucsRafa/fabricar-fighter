@@ -1100,7 +1100,7 @@ FF.Scenes = (function () {
       { key: 'sfx', label: `Efeitos sonoros: ${pct(s.sfx)}` },
       { key: 'voice', label: `Falas e locutor: ${s.voice ? 'Ligado' : 'Desligado'}` },
       { key: 'shake', label: `Tremor de câmera: ${s.shake ? 'Ligado' : 'Desligado'}` },
-      { key: 'graphics', label: `Gráficos: ${s.graphics === '2d' ? '2D clássico' : '3D'}` },
+      { key: 'graphics', label: `Gráficos: ${{ '3d': '3D (automático)', '3dmax': '3D (máximo)', '2d': '2D clássico' }[s.graphics] || '3D (automático)'}` },
       { key: 'difficulty', label: `Dificuldade da CPU: ${{ easy: 'Fácil', normal: 'Normal', hard: 'Difícil' }[s.difficulty]}` },
       { key: 'back', label: 'Voltar' },
     ];
@@ -1110,8 +1110,11 @@ FF.Scenes = (function () {
     if (key === 'music' || key === 'sfx') s[key] = U.clamp(Math.round((s[key] + d * 0.1) * 10) / 10, 0, 1);
     if (key === 'voice' || key === 'shake') s[key] = !s[key];
     if (key === 'graphics') {
-      s.graphics = s.graphics === '2d' ? '3d' : '2d';
+      const o = ['3d', '3dmax', '2d'];
+      s.graphics = o[(Math.max(0, o.indexOf(s.graphics)) + (d || 1) + 3) % 3];
       FF.force2D = s.graphics === '2d';
+      if (s.graphics === '3dmax') FF.GL.res = 1;
+      if (!FF.force2D && !FF.GL.ok) FF.notify('WebGL indisponível neste navegador: o 3D não pode ser ligado.', 6000);
     }
     if (key === 'difficulty') {
       const o = ['easy', 'normal', 'hard'];

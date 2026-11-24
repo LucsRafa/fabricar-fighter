@@ -633,7 +633,7 @@ void main(){
     const actor = M.mul(M.Ry(-yaw), M.S(1, 1, 1));
     const built = buildActor(mockF, pose, { actor });
     const headW = M.apply(actor, [built.J.head.x, built.ground - built.J.head.y, 0]);
-    const S = 256;
+    const S = 512; // retrato em alta para ficar nítido em telas grandes
     ensureSize(Math.max(canvas.width, S), Math.max(canvas.height, S));
     const s = S / 160;
     const fx = S / 2 - headW[0] * s;
