@@ -76,6 +76,7 @@ FF.Fighter = (function () {
       this.fumada = 0;
       this.rolling = false;
       this.whip = null;
+      this.tb = null;
       this.rollPhase = null;
       this.ballR = 0;
       this.rollAng = 0;

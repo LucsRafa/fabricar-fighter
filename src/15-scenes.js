@@ -381,9 +381,9 @@ FF.Scenes = (function () {
       if (e.type === 'left') this.move(p, -1);
       if (e.type === 'right') this.move(p, 1);
       if (e.type === 'up' || e.type === 'down') {
-        // grade 3 × 2: cima/baixo pula uma linha
+        // grade 4 × 2: cima/baixo pula uma linha
         const n = FF.Chars.list.length;
-        const ni = this.cur[p] + (e.type === 'up' ? -3 : 3);
+        const ni = this.cur[p] + (e.type === 'up' ? -4 : 4);
         if (ni >= 0 && ni < n) this.move(p, ni - this.cur[p]);
       }
       if (e.type === 'ok' || (e.type === 'key' && p === 1 && ['Numpad4', 'Insert', 'NumpadEnter'].includes(e.code))) this.confirm(p);
@@ -612,12 +612,12 @@ FF.Scenes = (function () {
     info(0, 70, 'left');
     if (!hideRight) info(1, W - 70, 'right');
 
-    // grade de retratos 3 × 2
-    const cols = 3, tw = 128, th = 152, gap = 10;
+    // grade de retratos 4 × 2
+    const cols = 4, tw = 128, th = 152, gap = 10;
     const gx0 = W / 2 - (cols * tw + (cols - 1) * gap) / 2;
     const gy0 = 742;
     this.rects.length = 0;
-    const slots = 6;
+    const slots = 8;
     for (let i = 0; i < slots; i++) {
       const x = gx0 + (i % cols) * (tw + gap);
       const y = gy0 + Math.floor(i / cols) * (th + gap);

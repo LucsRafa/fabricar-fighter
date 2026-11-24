@@ -327,8 +327,48 @@ FF.Chars = (function () {
   };
   tom.moves = Object.assign({}, scaleMoves(BASE, 1.0, 1.0, { light: 0, medium: 1, heavy: 1 }), { throw: Object.assign({}, THROW, { range: 150 }) });
 
+  // ---------------- RODOLFO (dev e jogador de tamboréu) ----------------
+  const rodolfo = {
+    id: 'rodolfo',
+    name: 'RODOLFO',
+    title: 'Dev full stack de dia, rei do tamboréu na praia à tarde',
+    role: 'Dev full stack',
+    stats: { str: 78, spd: 66, def: 76, int: 80 },
+    hp: 100,
+    dims: { thigh: 86, shin: 82, torso: 132, upper: 66, fore: 62, head: 34, neck: 13, hipW: 34, chest: 106, waist: 98, limbW: [31, 27, 38, 32] },
+    width: 108, height: 392,
+    walkF: 5.6, walkB: 4.6, jumpV: -26.5, jumpX: 7.4, gravity: 1.42, jumpSquat: 4,
+    dashF: { frames: 18, speed: 21 }, dashB: { frames: 20, speed: 18, invuln: 6 },
+    buffer: 7, stunMax: 66,
+    colors: { main: '#1D1E26', shade: '#121319', light: '#D8F04A', pants: '#3A5583', pantsShade: '#273B5E', skin: '#B47A50', skinShade: '#8E5A36', hair: '#1E1612', accent: '#D8F04A', shoe: '#E9ECF2', shoeAccent: '#C4602E' },
+    alt: { main: '#2E6B4F', shade: '#1F4A37', light: '#F3F6FF', pants: '#5B5142', pantsShade: '#40392E' },
+    portraitTint: '#8A9A2E',
+    build: 'chubby', sleeves: 'short', heavy: false,
+    look: { trail: '#D8F04A', glow: 'rgba(216,240,74,0.13)', meter: ['#E3F27A', '#C4602E'], intro: 'introR', win: 'winR', nameColor: '#E3F27A' },
+    ai: { superMaxDist: 1500, superMinHp: 0, superMaxHp: 100 },
+    super: 'tamboreu',
+    superName: 'Saque de Tamboréu',
+    superDesc: 'Saca a raquete de tamboréu e dispara 8 bolinhas no rival: 3 de dano cada (24 no total). Alcança a tela toda: não adianta fugir para o canto.',
+    secondaryName: 'Raquetada no Bug (I+K)',
+    voice: { pitch: 0.85, rate: 1.0 },
+    lines: {
+      intro: 'Subo o deploy e depois tem tamboréu na praia!',
+      super: 'SAQUE!',
+      ready: 'Raquete na mão, código na main!',
+      hit: 'Essa bola foi fora!',
+      win: 'Ponto, set e merge!',
+    },
+    specialList: [
+      { id: 'rally', key: 'sp4', motion: [4, 1, 2, 3, 6], win: 26, btn: 'any', label: 'Meia-lua + ataque', name: 'Rally de Commits' },
+      { id: 'smash', strong: true, key: 'sp2', motion: [6, 2, 3], win: 18, btn: 'p', label: 'Frente, baixo, diagonal + soco', name: 'Smash em Produção' },
+      { id: 'bolinha', proj: true, key: 'sp1', motion: [2, 3, 6], win: 18, btn: 'p', label: '¼ lua p/ frente + soco', name: 'Ping de Bolinha' },
+      { id: 'deixadinha', key: 'sp3', motion: [2, 1, 4], win: 18, btn: 'k', label: '¼ lua p/ trás + chute', name: 'Deixadinha' },
+    ],
+  };
+  rodolfo.moves = Object.assign({}, scaleMoves(BASE, 1.14, 1.16, { light: 1, medium: 2, heavy: 2 }), { throw: Object.assign({}, THROW, { range: 170 }) });
+
   // multiplicadores de dano a partir dos atributos
-  [andinho, marcelao, jailson, thiago, marcus, tom].forEach((c) => {
+  [andinho, marcelao, jailson, thiago, marcus, tom, rodolfo].forEach((c) => {
     c.strMul = 0.75 + (c.stats.str / 100) * 0.45;
     c.defMul = 1.2 - (c.stats.def / 100) * 0.45;
   });
@@ -367,6 +407,41 @@ FF.Chars = (function () {
           return { name: 'Cenário de Teste', anim: 'counterStance', kind: 'special', level: 'medium', startup: 2, total: 40, hits: [], cancel: null, counterWindow: [2, 22] };
         case 'counterStrike':
           return { name: 'Reprovado!', anim: 'counterStrike', kind: 'special', level: 'heavy', startup: 2, total: 26, hits: [], cancel: null };
+      }
+      return null;
+    }
+    if (charId === 'rodolfo') {
+      switch (id) {
+        case 'bolinha':
+          return {
+            name: 'Ping de Bolinha', anim: 'cast', kind: 'special', level: 'medium', startup: 11, total: 36, hits: [], cancel: null, racket: true,
+            spawn: { f: 11, type: 'tball', speed: S(s, 15, 18, 21), dmg: 6, level: 'medium', w: 64, h: 64, y: -300, x: 100 },
+          };
+        case 'smash':
+          return {
+            name: 'Smash em Produção', anim: 'rising', kind: 'special', level: 'heavy', startup: 5, total: 32, untilLand: true, landRec: 16, cancel: 'super', racket: true,
+            invuln: [0, S(s, 4, 6, 7)],
+            vel: [{ f0: 4, f1: 4, vx: S(s, 3, 4, 5), vy: S(s, -16, -19, -22) }],
+            hits: [{ f0: 5, f1: 13, box: [-6, -420, 120, 230], dmg: S(s, 11, 12, 13), level: 'heavy', height: 'mid', hitstun: 24, blockstun: 16, push: 7, hitstop: 11, stun: 11, launch: true, sfx: 'punchH' }],
+          };
+        case 'deixadinha':
+          return {
+            name: 'Deixadinha', anim: 'slide', kind: 'special', level: 'medium', startup: 8, total: 40, cancel: null,
+            vel: [{ f0: 6, f1: 22, vx: S(s, 13, 16, 19) }],
+            hits: [{ f0: 8, f1: 22, box: [6, -70, 160, 64], dmg: 7, level: 'medium', height: 'low', hitstun: 20, blockstun: 12, push: 10, hitstop: 8, stun: 8, knockdown: s === 'h', sfx: 'kickM' }],
+          };
+        case 'rally': {
+          const hits = [];
+          for (let i = 0; i < 5; i++)
+            hits.push({ f0: 8 + i * 4, f1: 9 + i * 4, box: [26, -330, 160, 130], dmg: S(s, 2, 2.2, 2.4), level: i === 4 ? 'heavy' : 'light', height: 'mid', hitstun: i === 4 ? 22 : 15, blockstun: 9, push: i === 4 ? 14 : 2, hitstop: i === 4 ? 9 : 4, stun: 3, sfx: 'punchL' });
+          return { name: 'Rally de Commits', anim: 'flurry', kind: 'special', level: 'medium', startup: 8, total: 48, hits, cancel: 'super', racket: true };
+        }
+        case 'secondary':
+          return {
+            name: 'Raquetada no Bug', anim: 'armorPunch', kind: 'special', level: 'heavy', startup: 15, total: 42, cancel: 'super', racket: true,
+            armor: [3, 14], armorHits: 1,
+            hits: [{ f0: 15, f1: 18, box: [30, -350, 175, 90], dmg: 10, level: 'heavy', height: 'mid', hitstun: 24, blockstun: 17, push: 18, hitstop: 12, stun: 13, kbBig: true, sfx: 'punchH' }],
+          };
       }
       return null;
     }
@@ -545,5 +620,5 @@ FF.Chars = (function () {
     return null;
   }
 
-  return { andinho, marcelao, jailson, thiago, marcus, tom, special, LV, list: ['andinho', 'marcelao', 'jailson', 'thiago', 'marcus', 'tom'] };
+  return { andinho, marcelao, jailson, thiago, marcus, tom, rodolfo, special, LV, list: ['andinho', 'marcelao', 'jailson', 'thiago', 'marcus', 'tom', 'rodolfo'] };
 })();

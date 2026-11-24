@@ -34,6 +34,11 @@ FF.Anim = (function () {
     crouch: BASE.andinho.crouch,
     jump: BASE.andinho.jump,
   };
+  BASE.rodolfo = {
+    stance: { lean: 4, head: -4, fa1: 42, fa2: 100, ba1: 24, ba2: 96, fl1: 22, fl2: -18, bl1: -22, bl2: -10, rot: 0 },
+    crouch: BASE.andinho.crouch,
+    jump: BASE.andinho.jump,
+  };
   BASE.marcus = {
     stance: { lean: 6, head: -2, fa1: 46, fa2: 100, ba1: 30, ba2: 108, fl1: 24, fl2: -22, bl1: -24, bl2: -12, rot: 0 },
     crouch: BASE.andinho.crouch,
@@ -100,6 +105,10 @@ FF.Anim = (function () {
     winTom: { fa1: 92, fa2: 2, ba1: 30, ba2: 120, lean: 4, head: -6, fl1: 18, fl2: -10, bl1: -16, bl2: -6 },
     whipUp: { fa1: 166, fa2: 34, ba1: 30, ba2: 100, lean: -8, head: -6 },
     whipCrack: { fa1: 96, fa2: 0, ba1: 20, ba2: 90, lean: 22, fl1: 34, bl1: -36 },
+    introR: { fa1: 150, fa2: 40, ba1: 24, ba2: 96, lean: -4, head: -8 },
+    winR: { fa1: 164, fa2: 8, ba1: 34, ba2: 110, lean: -6, head: -12, fl1: 18, fl2: -10, bl1: -16, bl2: -6 },
+    serveCock: { fa1: 150, fa2: 128, ba1: 150, ba2: 10, lean: -12, head: -10 },
+    serveHit: { fa1: 96, fa2: 6, ba1: 30, ba2: 90, lean: 22, fl1: 34, bl1: -36, head: 4 },
     introK: { fa1: 20, fa2: 120, ba1: 15, ba2: 125, lean: -6, head: -8 },
     winK: { fa1: 165, fa2: 10, ba1: 160, ba2: 15, lean: -6, head: -14, fl1: 20, fl2: -10, bl1: -20, bl2: -8 },
     curl: { lean: 62, head: 34, fa1: 120, fa2: 140, ba1: 110, ba2: 140, fl1: 100, fl2: -140, bl1: 64, bl2: -130 },
@@ -279,6 +288,14 @@ FF.Anim = (function () {
     if (sup === 'chicote') {
       if (f.whip && f.whip.lash > 0) return over(B.stance, P.whipCrack);
       return lerpPose(B.stance, over(B.stance, P.whipUp), U.clamp(t / 14, 0, 1));
+    }
+    if (sup === 'tamboreu') {
+      const tb = f.tb;
+      const cock = over(B.stance, P.serveCock);
+      const hit = over(B.stance, P.serveHit);
+      if (tb && tb.swing > 0) return tb.swing > 4 ? hit : lerpPose(hit, cock, (4 - tb.swing) / 4);
+      if (tb && tb.served > 0) return cock;
+      return lerpPose(B.stance, cock, U.clamp((t - 6) / 14, 0, 1));
     }
     if (sup === 'rolamento') {
       if (f.rollPhase === 'uncurl') return lerpPose(over(B.stance, P.curl), B.stance, U.clamp(f.rollT / 14, 0, 1));
@@ -1032,6 +1049,119 @@ FF.Anim = (function () {
     return { head: { x: 0, y: -R * 2 }, ground: 0, ball: true };
   }
 
+  // barba rala: pontinhos espalhados (fica com cara de barba por fazer)
+  function stubble(ctx, pts, r, col, alpha) {
+    ctx.save();
+    ctx.globalAlpha *= alpha;
+    ctx.fillStyle = col;
+    let seed = 7;
+    const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+    for (const [x0, y0, x1, y1, n] of pts) {
+      for (let i = 0; i < n; i++) {
+        const x = x0 + (x1 - x0) * rnd(), y = y0 + (y1 - y0) * rnd();
+        ctx.beginPath();
+        ctx.arc(x * r, y * r, r * 0.035, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+    ctx.restore();
+  }
+
+  function drawHeadRodolfo(ctx, h, r, ang, c, face) {
+    ctx.save();
+    ctx.translate(h.x, h.y);
+    ctx.rotate((180 - ang) * D);
+    ctx.beginPath();
+    ctx.ellipse(0, -r * 0.02, r * 0.98, r * 1.04, 0, 0, Math.PI * 2);
+    ctx.fillStyle = c.skin;
+    ctx.fill();
+    ctx.strokeStyle = OUT;
+    ctx.lineWidth = 4;
+    ctx.stroke();
+    // laterais raspadas (sombra bem baixinha)
+    ctx.fillStyle = 'rgba(30,22,18,0.28)';
+    ctx.beginPath();
+    ctx.ellipse(-r * 0.3, -r * 0.2, r * 0.6, r * 0.55, 0, 0, Math.PI * 2);
+    ctx.fill();
+    circle(ctx, { x: -r * 0.14, y: r * 0.04 }, r * 0.23, c.skinShade, 3);
+    // topete: cabelo só em cima, alto na frente
+    ctx.beginPath();
+    ctx.moveTo(-r * 0.7, -r * 0.62);
+    ctx.quadraticCurveTo(-r * 0.4, -r * 1.25, r * 0.35, -r * 1.42);
+    ctx.quadraticCurveTo(r * 1.02, -r * 1.42, r * 0.84, -r * 0.88);
+    ctx.quadraticCurveTo(r * 0.5, -r * 0.98, r * 0.1, -r * 0.84);
+    ctx.quadraticCurveTo(-r * 0.3, -r * 0.78, -r * 0.7, -r * 0.62);
+    ctx.fillStyle = c.hair;
+    ctx.fill();
+    ctx.strokeStyle = OUT;
+    ctx.lineWidth = 3;
+    ctx.stroke();
+    ctx.strokeStyle = 'rgba(255,255,255,0.25)';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(-r * 0.2, -r * 1.06);
+    ctx.quadraticCurveTo(r * 0.3, -r * 1.3, r * 0.7, -r * 1.2);
+    ctx.stroke();
+    // barba curta e aparada (não é barbudo)
+    ctx.beginPath();
+    ctx.moveTo(-r * 0.02, r * 0.2);
+    ctx.quadraticCurveTo(0, r * 0.88, r * 0.46, r * 0.96);
+    ctx.quadraticCurveTo(r * 0.9, r * 0.92, r * 0.98, r * 0.48);
+    ctx.lineTo(r * 0.84, r * 0.42);
+    ctx.quadraticCurveTo(r * 0.62, r * 0.64, r * 0.44, r * 0.46);
+    ctx.quadraticCurveTo(r * 0.2, r * 0.48, r * 0.14, r * 0.18);
+    ctx.closePath();
+    ctx.fillStyle = c.hair;
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(r * 0.54, r * 0.36);
+    ctx.quadraticCurveTo(r * 0.76, r * 0.28, r * 0.98, r * 0.38);
+    ctx.lineWidth = 5;
+    ctx.strokeStyle = c.hair;
+    ctx.stroke();
+    // boca
+    ctx.strokeStyle = OUT;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    if (face === 'shout' || face === 'hurt') {
+      ctx.ellipse(r * 0.72, r * 0.56, r * 0.15, r * 0.13, 0, 0, Math.PI * 2);
+      ctx.fillStyle = '#5A1020';
+      ctx.fill();
+      ctx.stroke();
+    } else {
+      ctx.moveTo(r * 0.58, r * 0.55);
+      ctx.quadraticCurveTo(r * 0.72, r * 0.6, r * 0.86, r * 0.52);
+      ctx.stroke();
+    }
+    // nariz
+    ctx.beginPath();
+    ctx.moveTo(r * 0.92, -r * 0.05);
+    ctx.quadraticCurveTo(r * 1.14, r * 0.18, r * 0.92, r * 0.26);
+    ctx.stroke();
+    // sobrancelha e olho
+    ctx.strokeStyle = c.hair;
+    ctx.lineWidth = 5;
+    ctx.beginPath();
+    ctx.moveTo(r * 0.38, -r * 0.38);
+    ctx.lineTo(r * 0.88, -r * 0.34);
+    ctx.stroke();
+    if (face === 'hurt') {
+      ctx.strokeStyle = OUT;
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(r * 0.52, -r * 0.22); ctx.lineTo(r * 0.72, -r * 0.02);
+      ctx.moveTo(r * 0.72, -r * 0.22); ctx.lineTo(r * 0.52, -r * 0.02);
+      ctx.stroke();
+    } else {
+      circle(ctx, { x: r * 0.64, y: -r * 0.12 }, r * 0.14, '#FFFFFF', 2.5);
+      ctx.fillStyle = OUT;
+      ctx.beginPath();
+      ctx.arc(r * 0.7, -r * 0.12, r * 0.07, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+
   function drawHeadTom(ctx, h, r, ang, c, face) {
     ctx.save();
     ctx.translate(h.x, h.y);
@@ -1057,18 +1187,13 @@ FF.Anim = (function () {
     ctx.fill();
     ctx.stroke();
     circle(ctx, { x: -r * 0.12, y: r * 0.05 }, r * 0.22, c.skinShade, 3);
-    // cavanhaque bem clarinho
-    ctx.save();
-    ctx.globalAlpha *= 0.5;
-    ctx.fillStyle = '#C2A27E';
-    ctx.beginPath();
-    ctx.moveTo(r * 0.4, r * 0.66);
-    ctx.lineTo(r * 0.8, r * 0.62);
-    ctx.lineTo(r * 0.64, r * 1.04);
-    ctx.lineTo(r * 0.46, r * 1.0);
-    ctx.closePath();
-    ctx.fill();
-    ctx.restore();
+    // barba, costeletas e bigode bem ralos (barba por fazer)
+    stubble(ctx, [
+      [-0.12, -0.2, 0.06, 0.4, 16],   // costeleta
+      [0.0, 0.4, 0.5, 0.98, 34],      // mandíbula
+      [0.46, 0.66, 0.86, 1.02, 22],   // queixo
+      [0.5, 0.3, 0.92, 0.4, 14],      // bigode
+    ], r, c.hair, 0.75);
     // olho verde
     circle(ctx, { x: r * 0.64, y: -r * 0.12 }, r * 0.15, '#FFFFFF', 2.5);
     ctx.fillStyle = '#2FA866';
@@ -1096,6 +1221,7 @@ FF.Anim = (function () {
   }
 
   const HEADS = {
+    rodolfo: drawHeadRodolfo,
     tom: drawHeadTom,
     marcus: drawHeadMarcus,
     andinho: (ctx, h, r, a, c, face) => drawHeadAndinho(ctx, h, r, a, c, face),
@@ -1104,7 +1230,61 @@ FF.Anim = (function () {
     thiago: drawHeadThiago,
   };
 
+  // Rodolfo segura a raquete de tamboréu no super, nos especiais com bola e na entrada/vitória
+  function hasRacket(f) {
+    if (f.id !== 'rodolfo') return false;
+    if (f.prop === 'racket') return true;
+    if (f.state === 'attack' && f.move && f.move.racket) return true;
+    return f.state === 'intro' || f.state === 'win';
+  }
+  // centro e ângulo da raquete na mão da frente (prolonga o antebraço)
+  function racketPos(J) {
+    const dx = J.fh.x - J.fe.x, dy = J.fh.y - J.fe.y;
+    const L = Math.hypot(dx, dy) || 1;
+    return { x: J.fh.x + (dx / L) * 42, y: J.fh.y + (dy / L) * 42, ang: Math.atan2(dy, dx) };
+  }
+  function drawRacket(ctx, x, y, ang, sc) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(ang);
+    ctx.scale(sc || 1, sc || 1);
+    // aro grosso de madeira (vista de 3/4) + face lisa
+    ctx.beginPath();
+    ctx.ellipse(0, 0, 40, 30, 0, 0, Math.PI * 2);
+    ctx.fillStyle = '#B8541F';
+    ctx.fill();
+    ctx.strokeStyle = OUT;
+    ctx.lineWidth = 4;
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.ellipse(3, 0, 30, 21, 0, 0, Math.PI * 2);
+    ctx.fillStyle = '#E9B98C';
+    ctx.fill();
+    ctx.strokeStyle = '#8A3C14';
+    ctx.lineWidth = 2.5;
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.ellipse(0, 0, 35, 25.5, 0, 0, Math.PI * 2);
+    ctx.strokeStyle = 'rgba(255,214,170,0.55)';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    // veios da madeira
+    ctx.strokeStyle = 'rgba(160,90,40,0.35)';
+    ctx.lineWidth = 2;
+    for (let i = -1; i <= 1; i++) {
+      ctx.beginPath();
+      ctx.moveTo(-20, i * 9);
+      ctx.quadraticCurveTo(4, i * 9 + 4, 26, i * 8);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
   function drawProp(ctx, f, J, c) {
+    if (hasRacket(f)) {
+      const rp = racketPos(J);
+      drawRacket(ctx, rp.x, rp.y, rp.ang, 1.2);
+    }
     if (f.prop === 'laptop') {
       const hx = (J.fh.x + J.bh.x) / 2, hy = (J.fh.y + J.bh.y) / 2;
       ctx.save();
@@ -1256,6 +1436,21 @@ FF.Anim = (function () {
         ctx.arc(q.x, q.y, 3, 0, Math.PI * 2);
         ctx.fill();
       }
+    } else if (f.id === 'rodolfo') {
+      seg(ctx, J.neck, J.head, 20, c.skin);
+      poly(ctx, torsoPoly(J, dm.chest, dm.waist), c.main);
+      shadeTorso(ctx, torsoPoly(J, dm.chest, dm.waist));
+      const mid = { x: (J.hip.x + J.neck.x) / 2, y: (J.hip.y + J.neck.y) / 2 };
+      ctx.save();
+      ctx.translate(mid.x + 4, mid.y - 24);
+      ctx.rotate(-(J.ang.sp - 180) * D);
+      ctx.scale(f.facing || 1, 1);
+      ctx.font = `28px ${FF.FONT_D}`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillStyle = c.light;
+      ctx.fillText('{ }', 0, 0);
+      ctx.restore();
     } else if (f.id === 'marcus') {
       seg(ctx, J.neck, J.head, 20, c.skin);
       const tp = torsoPoly(J, dm.chest, dm.waist);
@@ -1533,5 +1728,5 @@ FF.Anim = (function () {
   }
 
 
-  return { pose, solve, drawBody, drawCladiio, drawPortrait, standHeight, lerpPose, BASE, mixHex };
+  return { pose, solve, drawBody, drawCladiio, drawPortrait, standHeight, lerpPose, BASE, mixHex, hasRacket, racketPos, drawRacket };
 })();

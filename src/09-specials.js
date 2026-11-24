@@ -23,7 +23,7 @@ FF.Specials = (function () {
     B.stats.supers[f.id] = (B.stats.supers[f.id] || 0) + 1;
     FF.Audio.sfx('superStart');
     const sup = f.def.super;
-    const freeze = { cladiio: 80, tadalas: 74, tester: 60, fumada: 64, rolamento: 40, chicote: 34 }[sup] || 70;
+    const freeze = { cladiio: 80, tadalas: 74, tester: 60, fumada: 64, rolamento: 40, chicote: 34, tamboreu: 34 }[sup] || 70;
     B.startFreeze(f, freeze);
     B.cam.zoomTo(sup === 'cladiio' ? 1.22 : 1.25, f.x);
   };
@@ -35,6 +35,7 @@ FF.Specials = (function () {
     else if (sup === 'tester') S.testerUpdate(f);
     else if (sup === 'rolamento') S.rolamentoUpdate(f);
     else if (sup === 'chicote') S.chicoteUpdate(f);
+    else if (sup === 'tamboreu') S.tamboreuUpdate(f);
     else S.fumadaUpdate(f);
   };
 
@@ -136,6 +137,171 @@ FF.Specials = (function () {
       o.hitHigh = true;
       o.vx = -dir * 1.5; // puxado de leve pelo chicote
       if (o.airborne) o.vy = -4;
+    }
+  };
+
+  // ---------------- RODOLFO: Saque de Tamboréu ----------------
+  S.TB_BALLS = 8;
+  S.TB_DMG = 3;
+  S.TB_START = 30; // quadro do primeiro saque
+  S.TB_EVERY = 9;  // intervalo entre saques
+  const TB_TXT = ['SAQUE!', 'PING!', 'ACE!', 'NA LINHA!', 'BOLA DENTRO!', 'REQUEST!', 'TIMEOUT!', 'PONTO!'];
+  S.tamboreuUpdate = function (f) {
+    const B = f.battle;
+    const t = f.superFrame++;
+    const o = f.opp;
+    f.vx = 0;
+    if (!f.tb) f.tb = { balls: [], served: 0, hits: 0, swing: 0 };
+    const tb = f.tb;
+    if (tb.swing > 0) tb.swing--;
+    if (t === 2) f.prop = 'racket'; // saca a raquete de tamboréu
+    if (t === 4) {
+      f.face = 'shout';
+      f.say(f.def.lines.super);
+      B.message('SAQUE DE TAMBORÉU!', f.slot, 'callout');
+      FF.Audio.sfx('whooshH');
+    }
+    if (t === 8) B.darkT = 30;
+    // saques em sequência, cada bolinha mira onde o rival está agora
+    if (t >= S.TB_START && tb.served < S.TB_BALLS && (t - S.TB_START) % S.TB_EVERY === 0) {
+      const dir = Math.sign(o.x - f.x) || f.facing;
+      f.facing = dir;
+      const hx = f.x + dir * f.def.width * 0.9;
+      const hy = f.y - f.def.height * 0.72;
+      const tx = o.x, ty = o.y - o.def.height * (0.45 + (tb.served % 3) * 0.12);
+      const dist = Math.max(1, Math.hypot(tx - hx, ty - hy));
+      const sp = 34;
+      tb.balls.push({ x: hx, y: hy, vx: ((tx - hx) / dist) * sp, vy: ((ty - hy) / dist) * sp - 3, life: 70, spin: 0, trail: [] });
+      tb.served++;
+      tb.swing = 7;
+      FF.Audio.sfx('pock');
+      FF.Audio.sfx('whoosh');
+    }
+    // bolinhas em voo
+    for (const b of tb.balls) {
+      b.trail.push({ x: b.x, y: b.y });
+      if (b.trail.length > 6) b.trail.shift();
+      b.x += b.vx;
+      b.y += b.vy;
+      b.vy += 0.35;
+      b.spin += 0.5;
+      b.life--;
+      if (b.y > -16) {
+        // quicou no chão: some com poeira
+        b.life = 0;
+        B.fx.dust(b.x, 0, 2);
+      }
+      if (b.life > 0 && !o.isInvulnerable() && o.state !== 'thrown') {
+        const box = { x: b.x - 26, y: b.y - 26, w: 52, h: 52 };
+        if (FF.Col.hurtboxes(o).some((h) => FF.Col.overlap(box, h))) {
+          b.life = 0;
+          S.tbHit(f, o, b);
+        }
+      }
+      if (b.x < -200 || b.x > FF.STAGE_W + 200) b.life = 0;
+    }
+    tb.balls = tb.balls.filter((b) => b.life > 0);
+    const end = S.TB_START + S.TB_EVERY * (S.TB_BALLS - 1) + 26;
+    if (t >= end && tb.balls.length === 0) {
+      f.tb = null;
+      f.prop = null;
+      f.face = 'normal';
+      f.superActive = false;
+      f.superInvuln = false;
+      f.setState('idle', true);
+    }
+  };
+  S.tbHit = function (f, o, b) {
+    const B = f.battle;
+    const tb = f.tb;
+    tb.hits++;
+    B.stats.ballHits = (B.stats.ballHits || 0) + 1;
+    const last = tb.served >= S.TB_BALLS && tb.balls.filter((x) => x.life > 0).length === 0;
+    const dir = Math.sign(b.vx) || f.facing;
+    FF.Audio.sfx('punchM');
+    B.cam.shake(last ? 16 : 6);
+    B.fx.text(b.x + ((tb.hits % 3) - 1) * 60, b.y - 60 - (tb.hits % 3) * 38, TB_TXT[(tb.hits - 1) % TB_TXT.length], '#E3F27A', 34, 24);
+    if (o.tadalas > 0) {
+      B.fx.text(b.x, b.y - 30, 'IMUNE', '#FFC531', 40, 40);
+      FF.Audio.sfx('imune');
+      B.stats.immuneHits++;
+      return;
+    }
+    if (o.hp <= 0) return;
+    if (o.sleeping > 0 && o.hp - S.TB_DMG > 0) {
+      FF.Combat.damage(o, S.TB_DMG);
+      B.stats.ballDamage = (B.stats.ballDamage || 0) + S.TB_DMG;
+      o.flash = 5;
+      B.onHit(f, o, S.TB_DMG);
+      return;
+    }
+    if (o.sleeping > 0) o.sleeping = 0;
+    // cada bolinha causa exatamente 3 de dano (sem escala, não dá para defender)
+    FF.Combat.damage(o, S.TB_DMG);
+    B.stats.ballDamage = (B.stats.ballDamage || 0) + S.TB_DMG;
+    o.comboHits++;
+    o.comboDmg += S.TB_DMG;
+    o.face = 'hurt';
+    o.flash = 5;
+    o.gainMeter(2);
+    o.hitstop = last ? 12 : 5;
+    B.fx.spark(b.x, b.y, -dir, '#E3F27A', last ? 18 : 9, last ? 1.4 : 0.9);
+    B.onHit(f, o, S.TB_DMG);
+    if (last || o.hp <= 0) {
+      o.setState('juggle', true);
+      o.airborne = true;
+      o.y = Math.min(o.y, -4);
+      o.vy = -14;
+      o.vx = dir * 13;
+      o.juggleKD = true;
+      o.juggleInvuln = true;
+      o.juggleCount = FF.JUGGLE_LIMIT;
+      B.message('SUPER COMBO', f.slot);
+      if (o.hp <= 0) B.rounds.onKO(o, f);
+    } else {
+      o.setState('hitstun', true);
+      o.hitstun = 16;
+      o.hitHigh = b.y < o.y - o.def.height * 0.6;
+      o.vx = dir * 2.5;
+      if (o.airborne) o.vy = -3;
+    }
+  };
+  // bolinha de tamboréu (verde-limão com a costura branca)
+  S.drawTBall = function (ctx, x, y, r, spin) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(spin || 0);
+    const g = ctx.createRadialGradient(-r * 0.35, -r * 0.35, r * 0.1, 0, 0, r);
+    g.addColorStop(0, '#F4FF8A');
+    g.addColorStop(0.7, '#CDE63A');
+    g.addColorStop(1, '#9BB51E');
+    ctx.fillStyle = g;
+    ctx.strokeStyle = '#1A1033';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(0, 0, r, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    ctx.strokeStyle = 'rgba(255,255,255,0.9)';
+    ctx.lineWidth = Math.max(2, r * 0.14);
+    ctx.beginPath();
+    ctx.arc(-r * 1.05, 0, r * 0.8, -0.95, 0.95);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(r * 1.05, 0, r * 0.8, Math.PI - 0.95, Math.PI + 0.95);
+    ctx.stroke();
+    ctx.restore();
+  };
+  S.drawTamboreu = function (ctx, f, time) {
+    const tb = f.tb;
+    if (!tb) return;
+    for (const b of tb.balls) {
+      b.trail.forEach((p, i) => {
+        ctx.globalAlpha = ((i + 1) / b.trail.length) * 0.35;
+        S.drawTBall(ctx, p.x, p.y, 14 + i, b.spin);
+      });
+      ctx.globalAlpha = 1;
+      S.drawTBall(ctx, b.x, b.y, 22, b.spin);
     }
   };
 
@@ -749,7 +915,14 @@ FF.Specials = (function () {
       ctx.save();
       ctx.translate(this.x, this.y + this.h / 2);
       ctx.scale(this.facing, 1);
-      if (this.type === 'hu') {
+      if (this.type === 'tball') {
+        ctx.globalAlpha = 0.3;
+        for (let i = 1; i <= 3; i++) S.drawTBall(ctx, -i * 26, Math.sin(this.t * 0.4 - i) * 3, 22 - i * 3, this.t * 0.5);
+        ctx.globalAlpha = 1;
+        S.drawTBall(ctx, 0, 0, 26, this.t * 0.5);
+        ctx.scale(this.facing, 1);
+        FF.text(ctx, 'ping 12ms', 0, -44, { size: 16, font: FF.FONT_UI, weight: '700', color: '#E3F27A', lw: 4 });
+      } else if (this.type === 'hu') {
         ctx.rotate(Math.sin(time * 0.3) * 0.25);
         ctx.fillStyle = '#F3F6FF';
         ctx.strokeStyle = '#1A1033';
@@ -868,7 +1041,7 @@ FF.Specials = (function () {
   S.spawnProjectile = function (f, s) {
     const B = f.battle;
     B.projectiles.push(new Projectile(f, s));
-    FF.Audio.sfx(s.type === 'wave' ? 'wave' : 'projectile');
+    FF.Audio.sfx(s.type === 'wave' ? 'wave' : s.type === 'tball' ? 'pock' : 'projectile');
     if (s.type === 'wave') {
       B.cam.shake(10);
       B.fx.dust(f.x + f.facing * 80, 0, 10);

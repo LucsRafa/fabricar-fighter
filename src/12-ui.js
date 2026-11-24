@@ -148,6 +148,7 @@ FF.UI = (function () {
     // indicador de habilidade ativa
     let active = null;
     if (f.tadalas > 0) active = { text: `MODO TADALAS  ${(f.tadalas / 60).toFixed(1)}s`, color: '#FFC531' };
+    else if (f.tb) active = { text: `SAQUE DE TAMBORÉU  ${f.tb.hits}/8`, color: '#E3F27A' };
     else if (f.whip) active = { text: `CHICOTE DO PRAZO  ${f.whip.hits}/6`, color: '#A9C8F5' };
     else if (f.rolling) active = { text: `ROLAMENTO  ${f.rollHits || 0}/3`, color: '#9EC1FF' };
     else if (f.fumada > 0) active = { text: `FUMADA ${(f.fumada / 60).toFixed(1)}s · +10 ATQ · −1 HP/s`, color: '#C9CEDB' };

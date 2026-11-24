@@ -83,7 +83,7 @@ FF.Battle = (function () {
       this.stats = {
         hits: 0, blocks: 0, throws: 0, specials: 0, supers: {}, cladiioStrikes: 0, cladiioDamage: 0,
         immuneHits: 0, tadalasFrames: 0, tadalasActivations: 0, tadalasEnded: 0, superCombos: 0, frames: 0,
-        rollHits: 0, rollDamage: 0, whipHits: 0, whipDamage: 0,
+        rollHits: 0, rollDamage: 0, whipHits: 0, whipDamage: 0, ballHits: 0, ballDamage: 0,
         testerActivations: 0, testerHealed: 0, sleepFrames: 0, fumadaActivations: 0, fumadaFrames: 0, fumadaLoss: 0,
       };
       this.rounds = new FF.Rounds(this);
@@ -484,6 +484,7 @@ FF.Battle = (function () {
       for (const f of order) this.drawFighter(ctx, f);
       FF.GL.flush(ctx);
       for (const f of order) if (f.whip) this.drawWhip(ctx, f);
+      for (const f of order) if (f.tb) FF.Specials.drawTamboreu(ctx, f, this.time);
       for (const f of order) {
         if (f.tadalas > 0) {
           FF.text(ctx, (f.tadalas / 60).toFixed(1), f.x, f.y - f.def.height - 70, { size: 46, color: '#FFC531', lw: 8 });

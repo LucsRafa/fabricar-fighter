@@ -360,7 +360,7 @@ void main(){
     ell(P3(J.sb, -zA * 0.9), (uw / 2) * 1.1 * (isM ? pump : 1), (uw / 2) * 1.05 * (isM ? pump : 1), (uw / 2) * 1.05, sleeveUpperBack, { shine: 8 });
     // pescoço
     const headC = P3(J.head, 0);
-    const neckR = { andinho: 9, marcelao: 19, jailson: 8, thiago: 12, marcus: 12, tom: 10 }[f.id] || 10;
+    const neckR = { andinho: 9, marcelao: 19, jailson: 8, thiago: 12, marcus: 12, tom: 10, rodolfo: 14 }[f.id] || 10;
     capsule(neck3, [headC[0] + (neck3[0] - headC[0]) * 0.4, headC[1] + (neck3[1] - headC[1]) * 0.4, 0], neckR, c.skin, { shine: 16 });
     // acessórios do tronco
     if (f.id === 'andinho') {
@@ -392,7 +392,7 @@ void main(){
     const hput = (mesh, local, col, o) => put(mesh, M.mul(HM, local), col, o);
     const hell = (v, sx, sy, sz, col, o, rot) => hput(meshes.sphere, M.mul(M.mul(M.T(...hp(...v)), rot || M.id()), M.S(sx * r, sy * r, sz * r)), col, o);
     const hbox = (v, sx, sy, sz, col, o, rot) => hput(meshes.box, M.mul(M.mul(M.T(...hp(...v)), rot || M.id()), M.S(sx * r, sy * r, sz * r)), col, o);
-    const skull = { marcelao: [1.0, 1.04, 0.98], jailson: [0.98, 1.06, 0.96], marcus: [1.0, 1.04, 0.98] }[f.id] || [0.95, 1.05, 0.92];
+    const skull = { marcelao: [1.0, 1.04, 0.98], jailson: [0.98, 1.06, 0.96], marcus: [1.0, 1.04, 0.98], rodolfo: [1.0, 1.04, 0.98] }[f.id] || [0.95, 1.05, 0.92];
     hell([0, 0, 0], ...skull, c.skin, { shine: f.id === 'thiago' || f.id === 'marcus' || f.id === 'jailson' ? 55 : 22 });
     if (f.id === 'marcelao') hell([0.32, -0.5, 0], 0.62, 0.48, 0.82, c.skin, { shine: 18 });
     // orelhas
@@ -459,9 +459,21 @@ void main(){
       hell([-0.12, 0.62, 0], 0.96, 0.44, 0.86, c.hair, { shine: 80 });
       hell([-0.6, 0.45, 0], 0.5, 0.36, 0.74, c.hair, { shine: 80 });
       hell([0.42, 0.78, 0], 0.4, 0.22, 0.6, c.hair, { shine: 80 }, M.Rz(-0.3));
-      // cavanhaque bem clarinho e discreto
-      hell([0.74, -0.8, 0], 0.17, 0.2, 0.22, '#C2A27E', { a: 0.55, shine: 4 });
-      hell([0.86, -0.34, 0], 0.08, 0.04, 0.3, '#C2A27E', { a: 0.45, shine: 4 });
+      // barba, costeletas e bigode bem ralos: camada fina e translúcida colada no rosto
+      const st = { a: 0.34, shine: 2 };
+      hell([0.3, -0.5, 0], 0.68, 0.52, 0.99, c.hair, st);          // mandíbula e queixo
+      hell([0.02, -0.08, 0.86], 0.2, 0.4, 0.14, c.hair, st);        // costeleta
+      hell([0.02, -0.08, -0.86], 0.2, 0.4, 0.14, c.hair, st);
+      hell([0.9, -0.33, 0], 0.09, 0.05, 0.32, c.hair, { a: 0.42, shine: 2 }); // bigode
+    } else if (f.id === 'rodolfo') {
+      // laterais raspadas + topete só em cima, alto na frente
+      hell([-0.2, 0.05, 0], 0.83, 0.8, 1.0, '#5A4434', { a: 0.5, shine: 4 });
+      hell([-0.05, 0.68, 0], 0.86, 0.38, 0.72, c.hair, { shine: 50 });
+      hell([0.42, 0.92, 0], 0.48, 0.34, 0.6, c.hair, { shine: 50 }, M.Rz(-0.35));
+      hell([0.72, 0.86, 0], 0.22, 0.2, 0.46, c.hair, { shine: 50 }, M.Rz(-0.6));
+      // barba curta e aparada (não é barbudo) + bigode
+      hell([0.32, -0.56, 0], 0.68, 0.5, 0.97, c.hair, { shine: 8 });
+      hell([0.9, -0.32, 0], 0.13, 0.08, 0.38, c.hair, { shine: 8 });
     } else if (f.id === 'marcus') {
       hell([0.35, -0.55, 0], 0.72, 0.6, 0.96, c.hair, { shine: 8 });
       hell([0.9, -0.3, 0], 0.16, 0.1, 0.42, c.hair, { shine: 8 });
@@ -474,6 +486,15 @@ void main(){
     arm(J.sf, J.fe, J.fh, zA, sleeveUpper, foreFront, c.skin);
 
     // objetos de cena
+    if (FF.Anim.hasRacket(f)) {
+      // raquete de tamboréu: aro grosso de madeira + face lisa, virada para o rival
+      const rp = FF.Anim.racketPos(J);
+      const v = P3(rp, zA);
+      const R0 = M.mul(M.T(v[0], v[1], v[2]), M.mul(M.Rz(-rp.ang), M.Ry(0.95)));
+      put(meshes.torus, M.mul(R0, M.S(46, 46, 64)), '#B8541F', { shine: 60 });
+      put(meshes.ring, M.mul(R0, M.S(38, 38, 38)), '#8A3C14', { shine: 40 });
+      put(meshes.sphere, M.mul(R0, M.S(41, 41, 3)), '#E9B98C', { shine: 30 });
+    }
     if (f.prop === 'laptop') {
       const m = { x: (J.fh.x + J.bh.x) / 2 + 12, y: (J.fh.y + J.bh.y) / 2 + 4 };
       const v = P3(m, 0);
@@ -615,6 +636,7 @@ void main(){
       };
       const front = [built.chest[0] + built.chestR * 0.25, built.chest[1], built.chestR * built.tDepth * 0.95];
       if (e.f.id === 'andinho') decal('</>', front, 20, '#5FE0D2');
+      if (e.f.id === 'rodolfo') decal('{ }', [front[0], front[1] + 12, front[2]], 24, '#D8F04A');
       if (e.f.id === 'thiago') decal('PHP', [front[0], front[1] + 14, front[2]], 22, '#B6BEE8');
       if (e.f.id === 'jailson' && built.badge) decal('QA', [built.badge[0] + built.chestR * 0.78, built.badge[1], built.chestR * built.tDepth * 0.6], 12, '#E8323C');
     }

@@ -1,6 +1,6 @@
 # Fabricar Fighter
 
-Jogo de luta no navegador com os devs da Fabricar: Andinho, Marcelão, Jailson, Thiago, Marcus e Tom. Bonecos 3D feitos em WebGL próprio (sem bibliotecas), modo contra CPU, dois jogadores no mesmo teclado, treinamento e suporte a controle (Gamepad API).
+Jogo de luta no navegador com os devs da Fabricar: Andinho, Marcelão, Jailson, Thiago, Marcus, Tom e Rodolfo. Bonecos 3D feitos em WebGL próprio (sem bibliotecas), modo contra CPU, dois jogadores no mesmo teclado, treinamento e suporte a controle (Gamepad API).
 
 ## Como jogar
 
@@ -38,7 +38,7 @@ src/
   06-fx.js          partículas e câmera
   07-fighter.js     máquina de estados do lutador
   08-combat.js      acertos, defesa, combos, dano
-  09-specials.js    Cladiio, Tadalas, Tester Culposo, Fumada, Rolamento, Chicote
+  09-specials.js    Cladiio, Tadalas, Tester Culposo, Fumada, Rolamento, Chicote, Tamboréu
   10-ai.js          CPU
   11-stage.js       cenário Fabricar Arena
   12-ui.js          HUD

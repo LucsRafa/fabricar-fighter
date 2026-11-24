@@ -246,6 +246,11 @@ FF.Audio = (function () {
       case 'whoosh':
         noise(t, 0.12, 0.18 * v, d, 'bandpass', 900, 2.5);
         break;
+      case 'pock':
+        // batida seca da raquete de madeira na bolinha
+        osc('triangle', 820, t, 0.07, 0.55 * v, d, { to: 520 });
+        noise(t, 0.04, 0.35 * v, d, 'bandpass', 1800, 3);
+        break;
       case 'whooshH':
         noise(t, 0.2, 0.26 * v, d, 'bandpass', 600, 2);
         break;
